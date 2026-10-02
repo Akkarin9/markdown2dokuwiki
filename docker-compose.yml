@@ -1,0 +1,19 @@
+services:
+  markdown2dokuwiki:
+    build: .
+    container_name: markdown2dokuwiki
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.markdown2dokuwiki.rule: "Host(`convert.akkarin.org`)"
+      traefik.http.routers.markdown2dokuwiki.entrypoints: "websecure"
+      traefik.http.routers.markdown2dokuwiki.tls: "true"
+      traefik.http.routers.markdown2dokuwiki.tls.certresolver: "cloudflare"
+      traefik.http.services.markdown2dokuwiki.loadbalancer.server.port: "80"
+
+networks:
+  proxy:
+    external: true

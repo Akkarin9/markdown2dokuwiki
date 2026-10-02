@@ -1,0 +1,47 @@
+{
+  "name": "markdown2dokuwiki",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "md2doku": "dist-cli/md2doku.mjs",
+    "doku2md": "dist-cli/doku2md.mjs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:cli": "esbuild src/cli/cli.ts --bundle --platform=node --format=esm --outfile=dist-cli/md2doku.mjs && cp dist-cli/md2doku.mjs dist-cli/doku2md.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/lang-markdown": "^6.2.5",
+    "@codemirror/language": "^6.10.2",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.28.4",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@lezer/highlight": "^1.2.0",
+    "fflate": "^0.8.3",
+    "lucide-react": "^0.400.0",
+    "markdown-it": "^15.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/markdown-it": "^14.2.0",
+    "@types/node": "^22.5.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "happy-dom": "^20.14.5",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4",
+    "vitest": "^2.0.4"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Markdown ⇄ DokuWiki Converter",
+  "short_name": "MD ⇄ Doku",
+  "description": "Converti testo tra Markdown (Obsidian) e DokuWiki, in entrambe le direzioni. Tutto nel browser.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#16151b",
+  "theme_color": "#16151b",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

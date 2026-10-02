@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-cli
+.git
+.gitignore
+AGENTS.md
+prompt.md
+fase2.md
+PLAN-FASE2.md
+docs
+obsidian-plugin
+*.log
