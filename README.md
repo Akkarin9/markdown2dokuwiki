@@ -112,6 +112,12 @@ npm run typecheck  # solo controllo dei tipi
 npm run build:cli  # bundle della CLI in dist-cli/
 ```
 
+Icone e logo in `public/` sono generati dai sorgenti in `media/`:
+
+```bash
+python3 scripts/make-icons.py   # richiede Pillow e numpy
+```
+
 ---
 
 ## Caratteristiche
@@ -128,7 +134,7 @@ npm run build:cli  # bundle della CLI in dist-cli/
 - **Profili** salvabili (namespace, plugin, stili, pulizia) con import/export JSON.
 - **Rilevamento plugin** da un frammento di DokuWiki, per precompilare il profilo.
 - **Conversione batch**: più file → uno ZIP con `namespace/pagina.txt`, allegati in `media/`, `LEGGIMI.txt` e report degli avvisi.
-- **PWA installabile**, funzionante offline.
+- **PWA installabile**, funzionante offline, con icona e favicon dedicate.
 - Scorciatoie: `Ctrl/Cmd+K` palette, `Ctrl/Cmd+Shift+C` copia, `Ctrl/Cmd+Shift+S` inverti, `Ctrl/Cmd+Shift+H` cronologia.
 
 ### Plugin Obsidian

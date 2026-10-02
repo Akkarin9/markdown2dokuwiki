@@ -6,4 +6,6 @@ dist-cli
 AGENTS.md
 docs
 obsidian-plugin
+scripts
+media
 *.log

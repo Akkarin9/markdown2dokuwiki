@@ -424,8 +424,10 @@ export default function App() {
       {/* Intestazione */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-panel px-4 py-2.5">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-accent-soft text-sm font-bold text-accent">
-            MD
+          {/* Il wordmark ha il "2" chiaro: lo appoggio su un chip sempre scuro
+              così resta leggibile anche nel tema chiaro. */}
+          <span className="flex h-8 items-center rounded-lg bg-[#16151b] px-2">
+            <img src="/logo.png" alt="" width={120} height={22} className="h-[22px] w-auto" />
           </span>
           <div className="leading-tight">
             <h1 className="text-sm font-semibold">Markdown ⇄ DokuWiki</h1>
