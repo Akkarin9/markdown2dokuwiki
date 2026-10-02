@@ -75,8 +75,3 @@ export function isSegmentPlaceholder(line: string): number | null {
   const m = /^\u0002(\d+)\u0003$/.exec(line)
   return m ? Number(m[1]) : null
 }
-
-/** Indenta ogni riga di una lista DokuWiki: 2 spazi per livello. */
-export function dokuListIndent(level: number): string {
-  return '  '.repeat(Math.max(0, level))
-}

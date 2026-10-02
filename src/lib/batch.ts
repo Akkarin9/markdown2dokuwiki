@@ -16,12 +16,10 @@ import { dokuToMd } from '../converters/dokuToMd'
 import {
   joinNamespace,
   normalizePageName,
-  normalizePath,
   type ConversionResult,
   type Direction,
   type Options,
 } from '../converters/types'
-import { slugify } from './text'
 
 export interface BatchFile {
   name: string
@@ -62,13 +60,6 @@ export function outputPathFor(name: string, direction: Direction, namespace: str
   const ext = direction === 'md-to-doku' ? 'txt' : 'md'
   const fileName = `${page}.${ext}`
   return namespace ? `${namespace.replace(/:+$/, '')}/${fileName}` : fileName
-}
-
-/** @deprecated mantenuto per compatibilità: usa `outputPathFor`. */
-export function outputName(name: string, direction: Direction): string {
-  const base = name.replace(/\.[^.]+$/, '')
-  const slug = slugify(base) || 'documento'
-  return direction === 'md-to-doku' ? `${slug}.txt` : `${slug}.md`
 }
 
 /** Estensioni considerate allegati (media) nel batch. */
@@ -255,13 +246,8 @@ export function zipFromPlan(report: BatchReport, readme: string, attachments: Ba
   return new Blob([zipSync(zipData) as unknown as BlobPart], { type: 'application/zip' })
 }
 
-/** Converte un singolo file secondo la direzione. */
-export function convertFile(content: string, direction: Direction, options: Options): ConversionResult {
-  return direction === 'md-to-doku' ? mdToDoku(content, options) : dokuToMd(content, options)
-}
-
 /**
- * Converte più file e restituisce un Blob ZIP (retro-compatibile).
+ * Converte più file e restituisce un Blob ZIP.
  * Deduplica i nomi per non sovrascrivere documenti omonimi.
  */
 export function convertBatchToZip(
@@ -279,9 +265,4 @@ export function convertBatchToZip(
   const readme = renderReadme(report, direction, namespace)
   const blob = zipFromPlan(report, readme, extra.attachments ?? [])
   return { blob, items: report.items, report }
-}
-
-/** Normalizza un percorso di pagine per la risoluzione dei link cross-batch. */
-export function resolveBatchTarget(raw: string, namespace: string, preserveFolders: boolean): string {
-  return joinNamespace(namespace, normalizePath(raw, preserveFolders))
 }

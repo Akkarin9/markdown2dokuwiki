@@ -4,15 +4,19 @@ Plugin per Obsidian che converte le note **Markdown (Obsidian) → DokuWiki** e 
 
 ## Cosa fa
 
-| Comando | Effetto |
-| --- | --- |
-| **Converti la nota corrente in DokuWiki** | appunti e/o file `.txt` accanto alla nota (scelta nelle impostazioni) |
-| **Converti la selezione in DokuWiki** | sostituisce il testo selezionato |
-| **Converti la selezione da DokuWiki in Markdown** | il verso inverso |
-| **Importa da DokuWiki (incolla un documento)** | modale con anteprima live → nuova nota Markdown |
-| **Esporta la cartella corrente in DokuWiki** | `<cartella>/dokuwiki-out/` con `namespace/pagina.txt` + `LEGGIMI.txt` |
+Apri il **pannello laterale** dall'icona nella barra (o `Ctrl/Cmd+P` → "Apri il pannello laterale") e hai tutti i comandi a un clic:
 
-I comandi sono disponibili dalla **Command Palette** (`Ctrl/Cmd+P`) e dalle impostazioni del plugin.
+| Pulsante / Comando | Effetto |
+| --- | --- |
+| **Converti la nota in DokuWiki** | appunti e/o file `.txt` accanto alla nota (scelta nelle impostazioni) |
+| **Converti la selezione in DokuWiki** | sostituisce il testo selezionato |
+| **Converti la selezione da DokuWiki** | il verso inverso, sempre sulla selezione |
+| **Importa da DokuWiki…** | modale con anteprima live → nuova nota Markdown |
+| **Esporta la cartella in DokuWiki** | `<cartella>/dokuwiki-out/` con `namespace/pagina.txt` + `LEGGIMI.txt` |
+| **Apri le impostazioni** | la scheda del plugin |
+| **Dove va il risultato** | cambia al volo appunti → file → entrambe |
+
+Ogni pulsante corrisponde anche a un comando nella **Command Palette** (`Ctrl/Cmd+P`), quindi puoi assegnargli una scorciatoia.
 
 ## Installazione
 
@@ -60,10 +64,11 @@ Sono le stesse opzioni della webapp (voce **Markdown ⇄ DokuWiki** nelle impost
 
 ```
 obsidian-plugin/
-  main.ts               Plugin: registra i comandi
+  main.ts               Plugin: registra comandi, ribbon e vista laterale
   src/
     engine.ts           ri-esporta il motore da ../../src
     settings.ts         pannello impostazioni (mappa 1:1 su Options)
+    sidebar-view.ts     pannello laterale con i pulsanti dei comandi
     operations.ts       conversione nota/selezione, scrittura file, copia
     import-modal.ts     modale "importa da DokuWiki"
     export-folder.ts    esportazione cartella (buildBatchPlan)

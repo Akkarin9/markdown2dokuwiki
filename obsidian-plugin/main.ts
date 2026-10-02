@@ -1,14 +1,15 @@
 /**
  * Plugin Obsidian "Markdown ⇄ DokuWiki".
  *
- * Riusa il motore della webapp (`../../src`) bundlato da esbuild. Offre:
+ * Riusa il motore della webapp (`../src`) bundlato da esbuild. Offre:
  *  - conversione della nota corrente / della selezione in DokuWiki;
  *  - import di un documento DokuWiki incollato → nuova nota Markdown;
  *  - esportazione di una cartella intera in `namespace/pagina.txt`;
+ *  - pannello laterale con i pulsanti dei comandi;
  *  - pannello impostazioni con le stesse opzioni della webapp.
  */
 
-import { Notice, Plugin, TFile, TFolder, type Editor } from 'obsidian'
+import { Notice, Plugin, TFile, TFolder, type Editor, type WorkspaceLeaf } from 'obsidian'
 import { DEFAULT_SETTINGS, Md2DokuSettingTab, type Md2DokuSettings } from './src/settings'
 import {
   convertDokuToMarkdown,
@@ -19,6 +20,7 @@ import {
 } from './src/operations'
 import { ImportDokuModal } from './src/import-modal'
 import { exportFolder } from './src/export-folder'
+import { Md2DokuView, VIEW_TYPE_MD2DOKU } from './src/sidebar-view'
 
 export default class Md2DokuPlugin extends Plugin {
   settings: Md2DokuSettings = DEFAULT_SETTINGS
@@ -28,6 +30,20 @@ export default class Md2DokuPlugin extends Plugin {
     await this.loadSettings()
     this.addSettingTab(new Md2DokuSettingTab(this.app, this))
 
+    // ---------------------------------------------------------- Vista laterale
+    this.registerView(VIEW_TYPE_MD2DOKU, (leaf: WorkspaceLeaf) => new Md2DokuView(leaf, this))
+    this.addRibbonIcon('repeat', 'Markdown ⇄ DokuWiki', () => void this.activateView())
+    this.addCommand({
+      id: 'open-sidebar',
+      name: 'Apri il pannello laterale',
+      callback: () => void this.activateView(),
+    })
+
+    // Aggiorna il pannello quando cambia la nota attiva.
+    this.registerEvent(
+      this.app.workspace.on('active-leaf-change', () => this.refreshOpenViews()),
+    )
+
     // ------------------------------------------------ Nota corrente → DokuWiki
     this.addCommand({
       id: 'convert-note-to-doku',
@@ -35,7 +51,7 @@ export default class Md2DokuPlugin extends Plugin {
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile()
         if (!file || file.extension !== 'md') return false
-        if (!checking) void this.convertActiveFile(file)
+        if (!checking) void this.runConvertNote()
         return true
       },
     })
@@ -51,7 +67,7 @@ export default class Md2DokuPlugin extends Plugin {
     this.addCommand({
       id: 'import-doku',
       name: 'Importa da DokuWiki (incolla un documento)',
-      callback: () => new ImportDokuModal(this.app, this).open(),
+      callback: () => this.openImportModal(),
     })
 
     // Converti la selezione DokuWiki → Markdown (utile in senso inverso).
@@ -68,7 +84,7 @@ export default class Md2DokuPlugin extends Plugin {
       checkCallback: (checking) => {
         const folder = this.activeFolder()
         if (!folder) return false
-        if (!checking) void this.runFolderExport(folder)
+        if (!checking) void this.runFolderExport()
         return true
       },
     })
@@ -94,6 +110,106 @@ export default class Md2DokuPlugin extends Plugin {
     for (const view of this.openViews) view.refresh()
   }
 
+  registerOpenView(view: { refresh: () => void }): void {
+    this.openViews.add(view)
+  }
+
+  unregisterOpenView(view: { refresh: () => void }): void {
+    this.openViews.delete(view)
+  }
+
+  // ------------------------------------------------------------ API per la vista
+
+  /** Apre (o rivela) la vista laterale nello spazio di destra. */
+  async activateView(): Promise<void> {
+    const { workspace } = this.app
+    let leaf = workspace.getLeavesOfType(VIEW_TYPE_MD2DOKU)[0]
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(true)
+      await leaf.setViewState({ type: VIEW_TYPE_MD2DOKU, active: true })
+    }
+    workspace.revealLeaf(leaf)
+  }
+
+  /** La nota markdown attiva, se c'è. */
+  activeMarkdownFile(): TFile | null {
+    const file = this.app.workspace.getActiveFile()
+    return file && file.extension === 'md' ? file : null
+  }
+
+  /** La cartella della nota attiva (o la radice). */
+  activeFolder(): TFolder | null {
+    const file = this.app.workspace.getActiveFile()
+    if (file?.parent instanceof TFolder) return file.parent
+    const root = this.app.vault.getRoot()
+    return root instanceof TFolder ? root : null
+  }
+
+  /** Apre la scheda impostazioni del plugin. */
+  openSettings(): void {
+    const setting = (this.app as unknown as { setting?: { open: () => void; openTabById: (id: string) => void } })
+      .setting
+    setting?.open()
+    setting?.openTabById(this.manifest.id)
+  }
+
+  /** Cambia ciclicamente la destinazione dell'output (appunti → file → entrambe). */
+  async cycleOutputAction(): Promise<void> {
+    const order = ['clipboard', 'file', 'both'] as const
+    const idx = order.indexOf(this.settings.outputAction)
+    this.settings.outputAction = order[(idx + 1) % order.length]
+    await this.saveSettings()
+    this.refreshOpenViews()
+  }
+
+  // ---------------------------------------------------- azioni (comandi + vista)
+
+  /** Converte la nota Markdown attiva in DokuWiki. */
+  async runConvertNote(): Promise<void> {
+    const file = this.activeMarkdownFile()
+    if (!file) {
+      new Notice('Nessuna nota Markdown attiva')
+      return
+    }
+    await this.convertActiveFile(file)
+  }
+
+  /** Converte la selezione nell'editor attivo (Markdown → DokuWiki). */
+  async runConvertSelectionToDoku(): Promise<void> {
+    const editor = this.activeEditor()
+    if (!editor) return void new Notice('Nessun editor attivo')
+    await this.convertSelection(editor)
+  }
+
+  /** Converte la selezione nell'editor attivo (DokuWiki → Markdown). */
+  async runConvertSelectionFromDoku(): Promise<void> {
+    const editor = this.activeEditor()
+    if (!editor) return void new Notice('Nessun editor attivo')
+    await this.convertSelectionFromDoku(editor)
+  }
+
+  /** Esporta in DokuWiki la cartella della nota attiva. */
+  async runFolderExport(): Promise<void> {
+    const folder = this.activeFolder()
+    if (!folder) {
+      new Notice('Nessuna cartella attiva')
+      return
+    }
+    try {
+      await exportFolder(this.app, folder, this.settings)
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : 'Esportazione non riuscita')
+    }
+  }
+
+  openImportModal(): void {
+    new ImportDokuModal(this.app, this).open()
+  }
+
+  private activeEditor(): Editor | null {
+    return this.app.workspace.activeEditor?.editor ?? null
+  }
+
   /** Crea una nuova nota Markdown dal testo DokuWiki importato. */
   async createImportedNote(markdown: string, pageName: string): Promise<TFile> {
     const file = await createMarkdownNote(this.app, markdown, pageName)
@@ -102,13 +218,7 @@ export default class Md2DokuPlugin extends Plugin {
     return file
   }
 
-  // ------------------------------------------------------------------ comandi
-
-  private activeFolder(): TFolder | null {
-    const file = this.app.workspace.getActiveFile()
-    if (file?.parent instanceof TFolder) return file.parent
-    return this.app.vault.getRoot()
-  }
+  // ------------------------------------------------------------------ privati
 
   private async convertActiveFile(file: TFile): Promise<void> {
     const markdown = await this.app.vault.read(file)
@@ -144,13 +254,5 @@ export default class Md2DokuPlugin extends Plugin {
     const { output, warnings } = convertDokuToMarkdown(selection, this.settings)
     editor.replaceSelection(output)
     new Notice(warnings > 0 ? `Importato (${warnings} avvisi)` : 'Selezione importata')
-  }
-
-  private async runFolderExport(folder: TFolder): Promise<void> {
-    try {
-      await exportFolder(this.app, folder, this.settings)
-    } catch (error) {
-      new Notice(error instanceof Error ? error.message : 'Esportazione non riuscita')
-    }
   }
 }

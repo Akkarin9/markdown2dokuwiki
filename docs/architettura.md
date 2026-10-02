@@ -1,6 +1,6 @@
 # Architettura e funzionamento — Markdown ⇄ DokuWiki
 
-Documento tecnico del progetto: spiega come è strutturato, come avviene la conversione passo per passo, quali regole vengono applicate e perché. Le specifiche di partenza sono in `prompt.md` e `fase2.md`; questo documento descrive *l'implementazione*.
+Documento tecnico del progetto: spiega come è strutturato, come avviene la conversione passo per passo, quali regole vengono applicate e perché. Le specifiche di partenza sono state implementate per intero (piano in `prompt.md`/`fase2.md`, non più nel repository); questo documento descrive *l'implementazione*.
 
 ---
 

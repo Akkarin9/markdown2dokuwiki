@@ -1,9 +1,70 @@
 /* Stili del plugin Markdown ⇄ DokuWiki, in linea con la webapp. */
 
-.md2doku-import-modal .md2doku-hint {
+/* --------------------------------------------------- Pannello laterale */
+
+.md2doku-sidebar {
+  padding: 12px 14px;
+}
+
+.md2doku-title {
+  margin: 0 0 2px;
+}
+
+.md2doku-sidebar h5 {
+  margin: 18px 0 6px;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.md2doku-hint {
   color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  margin: 0 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md2doku-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 7px 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.md2doku-action:hover:not(:disabled) {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+.md2doku-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.md2doku-action-icon {
+  display: inline-flex;
+  color: var(--interactive-accent);
+}
+
+/* --------------------------------------------------- Modale di import */
+
+.md2doku-import-modal .md2doku-hint {
   font-size: var(--font-ui-small);
   margin-top: 0;
+  white-space: normal;
 }
 
 .md2doku-textarea {

@@ -2,7 +2,7 @@
 
 ## Repository state
 
-Vite + React + TS + Tailwind (v4) + Vitest + CodeMirror 6. **Completo circuito spec `fase2.md`**: motori (`src/converters/*`), UI (`src/App.tsx`, `src/components/*`), highlighting DokuWiki custom (`src/editor/dokuLanguage.ts`), opzioni + **profili** + **rilevamento plugin da frammento** (`src/lib/{profiles,plugins}.ts`), **batch ZIP** con namespace/allegati/report (`src/lib/batch.ts`), anteprima (`src/lib/preview.ts`), **diff** (`src/lib/diff.ts`), **cronologia IndexedDB** (`src/lib/history.ts`), **PWA** (`public/{manifest.webmanifest,sw.js}`), **CLI/libreria** (`src/cli/cli.ts`, `src/index.ts`), **plugin Obsidian** (`obsidian-plugin/`, riusa `../src`), `README.md` + `docs/`. **161 test verdi** (motore + smoke test UI). `prompt.md`/`fase2.md` restano le specifiche autoritative.
+Vite + React + TS + Tailwind (v4) + Vitest + CodeMirror 6. **Progetto completo**: motori (`src/converters/*`), UI (`src/App.tsx`, `src/components/*`), highlighting DokuWiki custom (`src/editor/dokuLanguage.ts`), opzioni + **profili** + **rilevamento plugin da frammento** (`src/lib/{profiles,plugins}.ts`), **batch ZIP** con namespace/allegati/report (`src/lib/batch.ts`), anteprima (`src/lib/preview.ts`), **diff** (`src/lib/diff.ts`), **cronologia IndexedDB** (`src/lib/history.ts`), **PWA** (`public/{manifest.webmanifest,sw.js}`), **CLI/libreria** (`src/cli/cli.ts`, `src/index.ts`), **plugin Obsidian** (`obsidian-plugin/`, riusa `../src`, con pannello laterale). **161 test verdi** (motore + smoke test UI). Repo pubblica: `Akkarin9/markdown2dokuwiki`. Le spec di partenza (`prompt.md`/`fase2.md`) sono state implementate e rimosse dal repo.
 
 ## Stack
 
@@ -72,7 +72,7 @@ MD → DokuWiki (inverse for Doku → MD):
 - `src/lib/history.ts` — last 30 conversions in IndexedDB (degrades silently if unavailable).
 - `src/cli/cli.ts` — `md2doku`/`doku2md` folder→folder CLI (esbuild bundle via `npm run build:cli`).
 - `src/index.ts` — public library entry point re-exporting the engine.
-- `obsidian-plugin/` — Obsidian plugin that **bundles `../src`** with esbuild (external only `obsidian`/`electron`/CodeMirror). Commands: convert current note / selection → DokuWiki, selection DokuWiki → MD, paste-import → new MD note, export folder → `namespace/pagina.txt`. Its settings map 1:1 to `Options`. Build/test with `cd obsidian-plugin && npm install && npm run build`. No `"type": "module"` in its `package.json` (the bundle is CJS, as Obsidian expects).
+- `obsidian-plugin/` — Obsidian plugin that **bundles `../src`** with esbuild (external only `obsidian`/`electron`/CodeMirror). It registers a **right-sidebar view** (`src/sidebar-view.ts`, ribbon icon + `open-sidebar` command) plus commands: convert current note / selection → DokuWiki, selection DokuWiki → MD, paste-import → new MD note, export folder → `namespace/pagina.txt`. Public methods (`runConvertNote`, `runConvertSelectionToDoku`, `runFolderExport`, `openImportModal`, `cycleOutputAction`) are shared by commands and the sidebar. Its settings map 1:1 to `Options`. Build/test with `cd obsidian-plugin && npm install && npm run build`. No `"type": "module"` in its `package.json` (the bundle is CJS, as Obsidian expects); `main.js` **is committed**.
 - `docs/architettura.md` — full technical documentation (engine phases, rule order, decisions). `docs/obsidian-plugin.md` — plugin design notes.
 - PWA: `public/manifest.webmanifest` + `public/sw.js`; registered in `src/main.tsx` only in `PROD`.
 
@@ -89,7 +89,7 @@ MD → DokuWiki (inverse for Doku → MD):
 
 ## Working agreement (explicitly requested by the user)
 
-Work in steps and **stop to show state after each**. All steps of `prompt.md` are ✅; the extended spec `fase2.md` has been implemented phase by phase (see `PLAN-FASE2.md`): engines, UI, options/profiles, batch, UI polish, extra features, CLI + Obsidian plugin plan, README. The polish pass also added a UI smoke test (`src/App.test.tsx`) and lazy-loaded CodeMirror. Always run `npx vitest run` and `npx tsc -b --noEmit` before reporting a change as done.
+Work in steps and **stop to show state after each**. The project is feature-complete: webapp, CLI and Obsidian plugin (with sidebar) all share the engine. Always run `npx vitest run` and `npx tsc -b --noEmit` before reporting a change as done; for the plugin also `cd obsidian-plugin && npm run build`.
 
 ## Decisions taken with the user (do not re-litigate)
 

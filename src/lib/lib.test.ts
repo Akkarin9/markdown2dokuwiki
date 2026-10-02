@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { deriveFileName, slugify, countText } from './text'
-import { convertBatchToZip, outputName, buildBatchPlan, renderReadme } from './batch'
+import { convertBatchToZip, buildBatchPlan, renderReadme, outputPathFor } from './batch'
 import { DEFAULT_OPTIONS } from '../converters/types'
 import { detectFormat } from './detect'
 import {
@@ -54,8 +54,9 @@ describe('detect', () => {
 
 describe('batch', () => {
   it('genera il nome di output corretto', () => {
-    expect(outputName('guida.md', 'md-to-doku')).toBe('guida.txt')
-    expect(outputName('guida.txt', 'doku-to-md')).toBe('guida.md')
+    expect(outputPathFor('guida.md', 'md-to-doku', '')).toBe('guida.txt')
+    expect(outputPathFor('guida.txt', 'doku-to-md', '')).toBe('guida.md')
+    expect(outputPathFor('Guida Sala.md', 'md-to-doku', 'ns')).toBe('ns/guida_sala.txt')
   })
 
   it('converte piu file e produce uno zip', () => {

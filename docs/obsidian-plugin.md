@@ -23,16 +23,19 @@ L'alternativa (pacchetto npm condiviso) resta valida se in futuro i due progetti
 
 | Componente | File |
 | --- | --- |
-| Registrazione comandi | `obsidian-plugin/main.ts` |
+| Registrazione comandi, ribbon e vista | `obsidian-plugin/main.ts` |
 | Impostazioni | `obsidian-plugin/src/settings.ts` |
+| Pannello laterale | `obsidian-plugin/src/sidebar-view.ts` |
 | Operazioni (nota, selezione, file) | `obsidian-plugin/src/operations.ts` |
 | Import da DokuWiki | `obsidian-plugin/src/import-modal.ts` |
 | Esportazione cartella | `obsidian-plugin/src/export-folder.ts` |
 | Bridge verso il motore | `obsidian-plugin/src/engine.ts` |
 
+I comandi e il pannello laterale condividono gli stessi metodi pubblici del plugin (`runConvertNote`, `runConvertSelectionToDoku`, `runFolderExport`, `openImportModal`, `cycleOutputAction`): nessuna logica duplicata tra la palette e la UI.
+
 ## Direzioni future
 
-1. **Pubblicazione diretta via XML-RPC** (`core.putPage` / `core.getPage`): caricare le pagine sulla wiki senza passare da file. Richiede URL, utente e token nelle impostazioni; da progettare con attenzione alla sicurezza (credenziali mai in chiaro se non richiesto).
+1. **Pubblicazione diretta via XML-RPC** (`core.putPage` / `core.getPage`): caricare le pagine sulla wiki senza passare da file. Richiede URL, utente e token nelle impostazioni; da progettare con attenzione alla sicurezza.
 2. **Allegati**: oggi restano nel vault. Si potrebbero scrivere in una cartella `media/` del vault o caricarli via API.
 3. **Rilevamento plugin**: portare `detectPlugins` nel pannello impostazioni per precompilare il profilo da un frammento incollato.
 4. **Anteprima diff** prima di esportare una cartella, per vedere cosa cambia nella pagina esistente.

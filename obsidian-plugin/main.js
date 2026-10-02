@@ -23,7 +23,7 @@ __export(main_exports, {
   default: () => Md2DokuPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 
 // src/settings.ts
 var import_obsidian = require("obsidian");
@@ -1971,20 +1971,140 @@ function joinPath(a, b) {
   return a ? `${a.replace(/\/+$/, "")}/${b}` : b;
 }
 
+// src/sidebar-view.ts
+var import_obsidian6 = require("obsidian");
+var VIEW_TYPE_MD2DOKU = "md2doku-sidebar";
+var Md2DokuView = class extends import_obsidian6.ItemView {
+  plugin;
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  getViewType() {
+    return VIEW_TYPE_MD2DOKU;
+  }
+  getDisplayText() {
+    return "Markdown \u21C4 DokuWiki";
+  }
+  getIcon() {
+    return "repeat";
+  }
+  async onOpen() {
+    this.plugin.registerOpenView(this);
+    this.refresh();
+  }
+  async onClose() {
+    this.plugin.unregisterOpenView(this);
+  }
+  /** Ridisegna il pannello (chiamato anche al cambio della nota attiva). */
+  refresh() {
+    const root = this.contentEl;
+    root.empty();
+    root.addClass("md2doku-sidebar");
+    const active = this.plugin.activeMarkdownFile();
+    root.createEl("h4", { text: "Markdown \u21C4 DokuWiki", cls: "md2doku-title" });
+    root.createEl("p", {
+      cls: "md2doku-hint",
+      text: active ? `Nota attiva: ${active.basename}` : "Nessuna nota Markdown attiva"
+    });
+    this.renderActions(root, [
+      {
+        label: "Converti la nota in DokuWiki",
+        icon: "repeat",
+        disabled: !active,
+        onClick: () => void this.plugin.runConvertNote()
+      },
+      {
+        label: "Converti la selezione in DokuWiki",
+        icon: "text-cursor-input",
+        onClick: () => void this.plugin.runConvertSelectionToDoku()
+      },
+      {
+        label: "Converti la selezione da DokuWiki",
+        icon: "text-cursor-input",
+        onClick: () => void this.plugin.runConvertSelectionFromDoku()
+      }
+    ]);
+    root.createEl("h5", { text: "Import" });
+    this.renderActions(root, [
+      {
+        label: "Importa da DokuWiki\u2026",
+        icon: "clipboard-paste",
+        onClick: () => this.plugin.openImportModal()
+      }
+    ]);
+    const folder = this.plugin.activeFolder();
+    root.createEl("h5", { text: "Cartella" });
+    root.createEl("p", { cls: "md2doku-hint", text: `Destinazione: ${folder?.path || "/"}` });
+    this.renderActions(root, [
+      {
+        label: "Esporta la cartella in DokuWiki",
+        icon: "folder-output",
+        disabled: !folder,
+        onClick: () => void this.plugin.runFolderExport()
+      }
+    ]);
+    root.createEl("h5", { text: "Configurazione" });
+    this.renderActions(root, [
+      {
+        label: "Apri le impostazioni",
+        icon: "settings",
+        onClick: () => this.plugin.openSettings()
+      },
+      {
+        label: "Dove va il risultato",
+        icon: "clipboard",
+        onClick: () => void this.plugin.cycleOutputAction()
+      }
+    ]);
+    root.createEl("p", {
+      cls: "md2doku-hint",
+      text: `Output: ${OUTPUT_LABELS[this.plugin.settings.outputAction]}`
+    });
+  }
+  renderActions(root, actions) {
+    for (const action of actions) {
+      const btn = root.createEl("button", { cls: "md2doku-action" });
+      btn.disabled = action.disabled ?? false;
+      const iconEl = btn.createSpan({ cls: "md2doku-action-icon" });
+      (0, import_obsidian6.setIcon)(iconEl, action.icon);
+      btn.createSpan({ text: action.label });
+      btn.addEventListener("click", () => {
+        if (!(action.disabled ?? false)) action.onClick();
+      });
+    }
+  }
+};
+var OUTPUT_LABELS = {
+  clipboard: "appunti",
+  file: "file accanto alla nota",
+  both: "appunti + file"
+};
+
 // main.ts
-var Md2DokuPlugin = class extends import_obsidian6.Plugin {
+var Md2DokuPlugin = class extends import_obsidian7.Plugin {
   settings = DEFAULT_SETTINGS;
   openViews = /* @__PURE__ */ new Set();
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new Md2DokuSettingTab(this.app, this));
+    this.registerView(VIEW_TYPE_MD2DOKU, (leaf) => new Md2DokuView(leaf, this));
+    this.addRibbonIcon("repeat", "Markdown \u21C4 DokuWiki", () => void this.activateView());
+    this.addCommand({
+      id: "open-sidebar",
+      name: "Apri il pannello laterale",
+      callback: () => void this.activateView()
+    });
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", () => this.refreshOpenViews())
+    );
     this.addCommand({
       id: "convert-note-to-doku",
       name: "Converti la nota corrente in DokuWiki",
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile();
         if (!file || file.extension !== "md") return false;
-        if (!checking) void this.convertActiveFile(file);
+        if (!checking) void this.runConvertNote();
         return true;
       }
     });
@@ -1996,7 +2116,7 @@ var Md2DokuPlugin = class extends import_obsidian6.Plugin {
     this.addCommand({
       id: "import-doku",
       name: "Importa da DokuWiki (incolla un documento)",
-      callback: () => new ImportDokuModal(this.app, this).open()
+      callback: () => this.openImportModal()
     });
     this.addCommand({
       id: "convert-selection-from-doku",
@@ -2009,7 +2129,7 @@ var Md2DokuPlugin = class extends import_obsidian6.Plugin {
       checkCallback: (checking) => {
         const folder = this.activeFolder();
         if (!folder) return false;
-        if (!checking) void this.runFolderExport(folder);
+        if (!checking) void this.runFolderExport();
         return true;
       }
     });
@@ -2029,19 +2149,98 @@ var Md2DokuPlugin = class extends import_obsidian6.Plugin {
   refreshOpenViews() {
     for (const view of this.openViews) view.refresh();
   }
+  registerOpenView(view) {
+    this.openViews.add(view);
+  }
+  unregisterOpenView(view) {
+    this.openViews.delete(view);
+  }
+  // ------------------------------------------------------------ API per la vista
+  /** Apre (o rivela) la vista laterale nello spazio di destra. */
+  async activateView() {
+    const { workspace } = this.app;
+    let leaf = workspace.getLeavesOfType(VIEW_TYPE_MD2DOKU)[0];
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false) ?? workspace.getLeaf(true);
+      await leaf.setViewState({ type: VIEW_TYPE_MD2DOKU, active: true });
+    }
+    workspace.revealLeaf(leaf);
+  }
+  /** La nota markdown attiva, se c'è. */
+  activeMarkdownFile() {
+    const file = this.app.workspace.getActiveFile();
+    return file && file.extension === "md" ? file : null;
+  }
+  /** La cartella della nota attiva (o la radice). */
+  activeFolder() {
+    const file = this.app.workspace.getActiveFile();
+    if (file?.parent instanceof import_obsidian7.TFolder) return file.parent;
+    const root = this.app.vault.getRoot();
+    return root instanceof import_obsidian7.TFolder ? root : null;
+  }
+  /** Apre la scheda impostazioni del plugin. */
+  openSettings() {
+    const setting = this.app.setting;
+    setting?.open();
+    setting?.openTabById(this.manifest.id);
+  }
+  /** Cambia ciclicamente la destinazione dell'output (appunti → file → entrambe). */
+  async cycleOutputAction() {
+    const order = ["clipboard", "file", "both"];
+    const idx = order.indexOf(this.settings.outputAction);
+    this.settings.outputAction = order[(idx + 1) % order.length];
+    await this.saveSettings();
+    this.refreshOpenViews();
+  }
+  // ---------------------------------------------------- azioni (comandi + vista)
+  /** Converte la nota Markdown attiva in DokuWiki. */
+  async runConvertNote() {
+    const file = this.activeMarkdownFile();
+    if (!file) {
+      new import_obsidian7.Notice("Nessuna nota Markdown attiva");
+      return;
+    }
+    await this.convertActiveFile(file);
+  }
+  /** Converte la selezione nell'editor attivo (Markdown → DokuWiki). */
+  async runConvertSelectionToDoku() {
+    const editor = this.activeEditor();
+    if (!editor) return void new import_obsidian7.Notice("Nessun editor attivo");
+    await this.convertSelection(editor);
+  }
+  /** Converte la selezione nell'editor attivo (DokuWiki → Markdown). */
+  async runConvertSelectionFromDoku() {
+    const editor = this.activeEditor();
+    if (!editor) return void new import_obsidian7.Notice("Nessun editor attivo");
+    await this.convertSelectionFromDoku(editor);
+  }
+  /** Esporta in DokuWiki la cartella della nota attiva. */
+  async runFolderExport() {
+    const folder = this.activeFolder();
+    if (!folder) {
+      new import_obsidian7.Notice("Nessuna cartella attiva");
+      return;
+    }
+    try {
+      await exportFolder(this.app, folder, this.settings);
+    } catch (error) {
+      new import_obsidian7.Notice(error instanceof Error ? error.message : "Esportazione non riuscita");
+    }
+  }
+  openImportModal() {
+    new ImportDokuModal(this.app, this).open();
+  }
+  activeEditor() {
+    return this.app.workspace.activeEditor?.editor ?? null;
+  }
   /** Crea una nuova nota Markdown dal testo DokuWiki importato. */
   async createImportedNote(markdown, pageName) {
     const file = await createMarkdownNote(this.app, markdown, pageName);
     await this.app.workspace.getLeaf(false).openFile(file);
-    new import_obsidian6.Notice(`Nota importata: ${file.path}`);
+    new import_obsidian7.Notice(`Nota importata: ${file.path}`);
     return file;
   }
-  // ------------------------------------------------------------------ comandi
-  activeFolder() {
-    const file = this.app.workspace.getActiveFile();
-    if (file?.parent instanceof import_obsidian6.TFolder) return file.parent;
-    return this.app.vault.getRoot();
-  }
+  // ------------------------------------------------------------------ privati
   async convertActiveFile(file) {
     const markdown = await this.app.vault.read(file);
     const { output, warnings } = convertMarkdownToDoku(markdown, this.settings, file.name);
@@ -2051,34 +2250,27 @@ var Md2DokuPlugin = class extends import_obsidian6.Plugin {
     }
     if (action === "file" || action === "both") {
       const written = await writeSibling(this.app, file.path, output, this.settings.outputExtension);
-      new import_obsidian6.Notice(`Scritto ${written.path}`);
+      new import_obsidian7.Notice(`Scritto ${written.path}`);
     }
   }
   async convertSelection(editor) {
     const selection = editor.getSelection();
     if (selection.trim() === "") {
-      new import_obsidian6.Notice("Nessuna selezione");
+      new import_obsidian7.Notice("Nessuna selezione");
       return;
     }
     const { output, warnings } = convertMarkdownToDoku(selection, this.settings);
     editor.replaceSelection(output);
-    new import_obsidian6.Notice(warnings > 0 ? `Convertito (${warnings} avvisi)` : "Selezione convertita");
+    new import_obsidian7.Notice(warnings > 0 ? `Convertito (${warnings} avvisi)` : "Selezione convertita");
   }
   async convertSelectionFromDoku(editor) {
     const selection = editor.getSelection();
     if (selection.trim() === "") {
-      new import_obsidian6.Notice("Nessuna selezione");
+      new import_obsidian7.Notice("Nessuna selezione");
       return;
     }
     const { output, warnings } = convertDokuToMarkdown(selection, this.settings);
     editor.replaceSelection(output);
-    new import_obsidian6.Notice(warnings > 0 ? `Importato (${warnings} avvisi)` : "Selezione importata");
-  }
-  async runFolderExport(folder) {
-    try {
-      await exportFolder(this.app, folder, this.settings);
-    } catch (error) {
-      new import_obsidian6.Notice(error instanceof Error ? error.message : "Esportazione non riuscita");
-    }
+    new import_obsidian7.Notice(warnings > 0 ? `Importato (${warnings} avvisi)` : "Selezione importata");
   }
 };
