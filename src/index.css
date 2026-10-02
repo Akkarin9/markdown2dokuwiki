@@ -1,4 +1,13 @@
-@import 'tailwindcss';
+/*
+ * `source(none)` disattiva la scansione automatica dell'intero progetto e
+ * limita le sorgenti Tailwind a quelle dichiarate sotto: la build diventa
+ * riproducibile e non dipende da cosa c'è nella cartella (es. `obsidian-plugin/`
+ * è escluso da Docker ma presente in locale).
+ */
+@import 'tailwindcss' source(none);
+
+@source './**/*.{ts,tsx}';
+@source '../index.html';
 
 /*
  * Font self-hosted (variabili, woff2): nessuna richiesta a Google Fonts.
