@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  motore:
+    name: Motore (test + typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --include=dev
+      - run: npm test
+      - run: npm run typecheck
+
+  plugin:
+    name: Plugin Obsidian (build + bundle aggiornato)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            obsidian-plugin/package-lock.json
+      - run: npm ci --include=dev
+      - run: npm ci --prefix obsidian-plugin
+      - run: npm --prefix obsidian-plugin run build
+      - name: Il bundle committato (main.js) è aggiornato
+        run: git diff --exit-code -- obsidian-plugin/main.js

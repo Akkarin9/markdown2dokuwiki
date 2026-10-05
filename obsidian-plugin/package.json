@@ -1,0 +1,17 @@
+{
+  "name": "obsidian-md2doku",
+  "version": "0.1.0",
+  "description": "Plugin Obsidian per convertire Markdown ⇄ DokuWiki, riusando il motore condiviso di markdown2dokuwiki.",
+  "private": true,
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "esbuild": "^0.21.5",
+    "obsidian": "^1.13.1",
+    "typescript": "^5.5.3"
+  }
+}

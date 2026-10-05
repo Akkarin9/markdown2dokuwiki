@@ -1,0 +1,9 @@
+{
+  "id": "md2doku-converter",
+  "name": "Markdown ⇄ DokuWiki",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Converti note Markdown (Obsidian) in DokuWiki e importa documenti DokuWiki incollandoli. Usa il motore condiviso di markdown2dokuwiki.",
+  "author": "Akkarin",
+  "isDesktopOnly": false
+}
